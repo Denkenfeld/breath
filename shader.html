@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BREATH SYNC</title>
+    <style>
+        * { margin: 0; padding: 0; }
+        body, html { width: 100vw; height: 100vh; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
+        canvas { display: block; width: 100%; height: 100%; }
+        #c { position: fixed; top: 0; left: 0; z-index: 0; }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        #ui-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 30px; color: white; }
+        #header { text-align: center; position: relative; }
+        #header h1 { font-size: 3em; font-weight: 300; text-shadow: 0 0 30px rgba(79, 172, 254, 0.8); margin-bottom: 10px; letter-spacing: 3px; }
+        #header p { font-size: 1.1em; opacity: 0.9; font-weight: 300; }
+        
+        #audio-controls { position: absolute; top: 10px; right: 10px; display: flex; gap: 15px; pointer-events: all; }
+        .toggle-btn { background: rgba(0, 0, 0, 0.4); border: 2px solid rgba(79, 172, 254, 0.4); color: white; padding: 10px 20px; font-size: 0.9em; border-radius: 25px; cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
+        .toggle-btn:hover { background: rgba(79, 172, 254, 0.3); border-color: rgba(79, 172, 254, 0.6); }
+        .toggle-btn.active { background: rgba(79, 172, 254, 0.4); border-color: rgba(79, 172, 254, 0.8); }
+        .toggle-btn .icon { font-size: 1.2em; }
+        
+        #center-info { text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        #phase { font-size: 2.8em; font-weight: 300; margin-bottom: 20px; text-shadow: 0 0 20px rgba(79, 172, 254, 0.9); letter-spacing: 2px; }
+        #timer { font-size: 7em; font-weight: 700; text-shadow: 0 0 40px rgba(79, 172, 254, 1); margin-bottom: 30px; }
+        #goal-progress { background: rgba(0, 0, 0, 0.3); border-radius: 30px; padding: 20px 40px; backdrop-filter: blur(15px); border: 1px solid rgba(79, 172, 254, 0.3); margin-top: 20px; }
+        #goal-text { font-size: 1.4em; margin-bottom: 15px; font-weight: 300; }
+        #progress-bar-container { width: 400px; height: 20px; background: rgba(0, 0, 0, 0.5); border-radius: 10px; overflow: hidden; }
+        #progress-bar { height: 100%; background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); width: 0%; transition: width 0.5s ease; }
+        #progress-text { font-size: 1.2em; margin-top: 10px; opacity: 0.9; }
+        #motivational-text { font-size: 1.5em; margin-top: 15px; opacity: 0; transition: opacity 0.5s ease; font-style: italic; color: #4facfe; }
+        #motivational-text.show { opacity: 1; }
+        #footer { display: flex; justify-content: space-between; align-items: center; }
+        #stats { font-size: 1.2em; background: rgba(0, 0, 0, 0.3); padding: 15px 25px; border-radius: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(79, 172, 254, 0.3); }
+        #stats div { margin: 5px 0; font-weight: 300; }
+        #controls { pointer-events: all; }
+        button { background: rgba(79, 172, 254, 0.2); border: 2px solid rgba(79, 172, 254, 0.5); color: white; padding: 15px 30px; font-size: 1.2em; border-radius: 50px; cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s ease; margin: 0 5px; font-weight: 300; letter-spacing: 1px; }
+        button:hover { background: rgba(79, 172, 254, 0.4); transform: translateY(-2px); }
+        #intro-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 100; display: flex; justify-content: center; align-items: center; padding: 40px; }
+        #intro-content { max-width: 650px; text-align: center; color: white; background: rgba(0, 0, 0, 0.5); padding: 50px; border-radius: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(79, 172, 254, 0.3); }
+        #intro-content h1 { font-size: 4em; margin-bottom: 20px; font-weight: 300; text-shadow: 0 0 30px rgba(79, 172, 254, 0.8); letter-spacing: 5px; }
+        #intro-content h2 { font-size: 1.8em; margin: 30px 0 15px; font-weight: 400; color: #4facfe; }
+        #intro-content p { font-size: 1.2em; line-height: 1.8; margin-bottom: 15px; opacity: 0.9; font-weight: 300; }
+        #intro-content ul { text-align: left; margin: 20px auto; max-width: 400px; font-size: 1.1em; line-height: 2; }
+        #start-btn { margin-top: 30px; padding: 20px 50px; font-size: 1.5em; }
+        .hidden { display: none !important; }
+        #completion-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 50; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
+        #completion-overlay.show { opacity: 1; pointer-events: all; }
+        #completion-content { text-align: center; color: white; background: rgba(0, 0, 0, 0.5); padding: 60px; border-radius: 30px; backdrop-filter: blur(20px); border: 2px solid rgba(79, 172, 254, 0.5); transform: scale(0.8); transition: transform 0.5s ease; }
+        #completion-overlay.show #completion-content { transform: scale(1); }
+        #completion-content h2 { font-size: 3.5em; margin-bottom: 20px; }
+        #completion-content p { font-size: 1.5em; margin: 15px 0; }
+        @media (max-width: 768px) { 
+            #progress-bar-container { width: 300px; } 
+            #header h1 { font-size: 2em; } 
+            #phase { font-size: 2em; } 
+            #timer { font-size: 5em; }
+            #audio-controls { position: static; margin-top: 15px; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<audio id="bg-music" loop preload="auto">
+    <source src="breathe.mp3" type="audio/mpeg">
+</audio>
+<div id="intro-screen"><div id="intro-content"><h1>💨 BREATH SYNC</h1><p style="font-size: 1.4em; margin-bottom: 30px;">Box Breathing für Stress-Reduktion</p><h2>Dein Ziel</h2><p><strong>10 Atemzyklen</strong> in 2-3 Minuten</p><h2>Wie funktioniert's?</h2><p>Box Breathing (4-4-4-4) - Navy SEALs Atemtechnik</p><ul><li>🌬️ <strong>4 Sekunden</strong> einatmen</li><li>⏸️ <strong>4 Sekunden</strong> Atem halten</li><li>🌊 <strong>4 Sekunden</strong> ausatmen</li><li>⏸️ <strong>4 Sekunden</strong> Atem halten</li></ul><button id="start-btn">Jetzt starten</button></div></div>
+<div id="completion-overlay"><div id="completion-content"><h2>🎉 Ziel erreicht!</h2><p>10 Atemzyklen abgeschlossen!</p><button id="continue-btn" style="margin-top: 30px;">Weiter üben</button><button id="finish-btn" style="margin-top: 30px;">Beenden</button></div></div>
+<div id="canvas-container"></div>
+<div id="ui-overlay">
+    <div id="header">
+        <h1>BREATH SYNC</h1>
+        <p>Box Breathing • 4-4-4-4</p>
+        <div id="audio-controls">
+            <button class="toggle-btn active" id="sound-toggle">
+                <span class="icon">🔊</span>
+                <span>Sound</span>
+            </button>
+            <button class="toggle-btn active" id="music-toggle">
+                <span class="icon">🎵</span>
+                <span>Musik</span>
+            </button>
+        </div>
+    </div>
+    <div id="center-info">
+        <div id="phase">Bereit</div>
+        <div id="timer">4</div>
+        <div id="goal-progress">
+            <div id="goal-text">Ziel: 10 Atemzyklen</div>
+            <div id="progress-bar-container"><div id="progress-bar"></div></div>
+            <div id="progress-text"><span id="cycles">0</span> / 10 Zyklen</div>
+            <div id="motivational-text"></div>
+        </div>
+    </div>
+    <div id="footer">
+        <div id="stats">
+            <div>⏱️ Zeit: <span id="total-time">0:00</span></div>
+            <div>🎯 Fortschritt: <span id="progress-percent">0</span>%</div>
+        </div>
+        <div id="controls">
+            <button id="pause-btn">Pause</button>
+            <button id="reset-btn">Reset</button>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.min.js"></script>
+<script>
+const c = document.getElementById('c');
+const gl = c.getContext('webgl2') || c.getContext('webgl');
+if(!gl) { alert('WebGL nicht verfügbar'); }
+
+const vs = `
+attribute vec2 position;
+void main() { 
+  gl_Position = vec4(position, 0.0, 1.0); 
+}`;
+
+const fs = `
+#ifdef GL_ES
+precision highp float;
+#endif
+
+uniform vec2 resolution;
+uniform float time;
+uniform sampler2D backbuffer;
+
+vec4 tanh_approx(vec4 x) {
+  vec4 x2 = x * x;
+  return x * (27.0 + x2) / (27.0 + 9.0 * x2);
+}
+
+void main() {
+  vec2 FC = gl_FragCoord.xy;
+  vec4 o = vec4(0.0);
+
+  vec2 p = (FC * 2.0 - resolution) / resolution.y / 0.4;
+  vec2 v;
+
+  for(float i = 0.0; i < 9.0; i += 1.0) {
+    v = p;
+    for(float f = 1.0; f < 8.0; f += 1.0) {
+      v = (v + sin(v * f / 0.6 + i * 0.3 + cos(i + vec2(0.0, 2.0) + time / 2.0)) / f).yx;
+    }
+    float l = length(v) - 1.0;
+    o += 0.04 / abs(l) * (cos(i * 0.3 + 0.1 / l + vec4(0.0, 1.0, 2.0, 3.0)) + 1.0);
+  }
+
+  vec4 fb = texture2D(backbuffer, (FC + resolution.y * 0.02 * sin(FC + FC.yx / 0.6)) / resolution);
+  o = max(tanh_approx(o + fb * o), 0.0);
+
+  gl_FragColor = o;
+}`;
+
+function createShader(type, source) {
+  const shader = gl.createShader(type);
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if(!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    console.error('Shader Error:', gl.getShaderInfoLog(shader));
+    return null;
+  }
+  return shader;
+}
+
+const vertShader = createShader(gl.VERTEX_SHADER, vs);
+const fragShader = createShader(gl.FRAGMENT_SHADER, fs);
+if(!vertShader || !fragShader) throw new Error('Shader compilation failed');
+
+const program = gl.createProgram();
+gl.attachShader(program, vertShader);
+gl.attachShader(program, fragShader);
+gl.linkProgram(program);
+
+if(!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+  console.error('Link Error:', gl.getProgramInfoLog(program));
+  throw new Error('Program link failed');
+}
+
+const posBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+  -1, -1,  1, -1,  -1, 1,
+  -1, 1,   1, -1,  1, 1
+]), gl.STATIC_DRAW);
+
+const posLoc = gl.getAttribLocation(program, 'position');
+const resLoc = gl.getUniformLocation(program, 'resolution');
+const timeLoc = gl.getUniformLocation(program, 'time');
+const bbLoc = gl.getUniformLocation(program, 'backbuffer');
+
+let textures = [];
+let fbos = [];
+
+function initBuffers(width, height) {
+  textures.forEach(t => gl.deleteTexture(t));
+  fbos.forEach(f => gl.deleteFramebuffer(f));
+  textures = [];
+  fbos = [];
+
+  for(let i = 0; i < 2; i++) {
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    textures.push(tex);
+
+    const fbo = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    gl.clearColor(0, 0, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    fbos.push(fbo);
+  }
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+}
+
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = Math.floor(window.innerWidth * dpr);
+  const h = Math.floor(window.innerHeight * dpr);
+
+  if(c.width !== w || c.height !== h) {
+    c.width = w;
+    c.height = h;
+    gl.viewport(0, 0, w, h);
+    initBuffers(w, h);
+  }
+}
+
+resize();
+window.addEventListener('resize', resize);
+
+let currentBuffer = 0;
+const startTime = Date.now();
+
+function render() {
+  const time = (Date.now() - startTime) * 0.0003;
+
+  const readBuffer = textures[1 - currentBuffer];
+  const writeBuffer = currentBuffer;
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbos[writeBuffer]);
+  gl.useProgram(program);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+  gl.enableVertexAttribArray(posLoc);
+  gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, readBuffer);
+  gl.uniform1i(bbLoc, 0);
+
+  gl.uniform2f(resLoc, c.width, c.height);
+  gl.uniform1f(timeLoc, time);
+
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.bindTexture(gl.TEXTURE_2D, textures[writeBuffer]);
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+  currentBuffer = 1 - currentBuffer;
+
+  requestAnimationFrame(render);
+}
+
+render();
+
+// Audio Setup
+const bgMusic = document.getElementById('bg-music');
+let soundEnabled = true;
+let musicEnabled = true;
+
+const soundToggle = document.getElementById('sound-toggle');
+const musicToggle = document.getElementById('music-toggle');
+
+soundToggle.addEventListener('click', () => {
+    soundEnabled = !soundEnabled;
+    soundToggle.classList.toggle('active');
+    soundToggle.querySelector('.icon').textContent = soundEnabled ? '🔊' : '🔇';
+});
+
+musicToggle.addEventListener('click', () => {
+    musicEnabled = !musicEnabled;
+    musicToggle.classList.toggle('active');
+    musicToggle.querySelector('.icon').textContent = musicEnabled ? '🎵' : '🎶';
+    
+    if (musicEnabled && isRunning) {
+        bgMusic.play().catch(e => console.log('Music play failed:', e));
+    } else {
+        bgMusic.pause();
+    }
+});
+
+// Three.js
+const GOAL_CYCLES = 10;
+const motivationalMessages = ["Großartig! 💪", "Super! 🌟", "Halber Weg! 🎯", "Fast geschafft! 🚀", "Noch ein bisschen! ⭐", "Profi! 🏆"];
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+function playTone(frequency = 440, duration = 0.15) {
+    if (!soundEnabled) return;
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    oscillator.frequency.value = frequency;
+    oscillator.type = 'sine';
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + duration);
+}
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setClearColor(0x000000, 0);
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+camera.position.z = 5;
+
+// Hauptkugel
+const geometry = new THREE.SphereGeometry(1, 128, 128);
+const material = new THREE.MeshPhysicalMaterial({ 
+    color: 0x4facfe,
+    metalness: 0.1,
+    roughness: 0.05,
+    transparent: true,
+    opacity: 0.9,
+    transmission: 0.3,
+    thickness: 0.5,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.05,
+    ior: 1.5,
+    reflectivity: 0.5
+});
+const sphere = new THREE.Mesh(geometry, material);
+scene.add(sphere);
+
+// Innerer Kern
+const coreGeometry = new THREE.SphereGeometry(0.6, 64, 64);
+const coreMaterial = new THREE.MeshBasicMaterial({ 
+    color: 0x4facfe, 
+    transparent: true, 
+    opacity: 0.8 
+});
+const core = new THREE.Mesh(coreGeometry, coreMaterial);
+sphere.add(core);
+
+// Zusätzliche innere Kugel für mehr Tiefe
+const innerSphereGeo = new THREE.SphereGeometry(0.8, 64, 64);
+const innerSphereMat = new THREE.MeshPhysicalMaterial({
+    color: 0x00f2fe,
+    transparent: true,
+    opacity: 0.4,
+    transmission: 0.5,
+    thickness: 0.3,
+    roughness: 0.1
+});
+const innerSphere = new THREE.Mesh(innerSphereGeo, innerSphereMat);
+sphere.add(innerSphere);
+
+// Glow-Effekt
+const glowGeometry = new THREE.SphereGeometry(1.2, 64, 64);
+const glowMaterial = new THREE.ShaderMaterial({
+    uniforms: { glowColor: { value: new THREE.Color(0x4facfe) } },
+    vertexShader: `varying vec3 vNormal; void main() { vNormal = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader: `uniform vec3 glowColor; varying vec3 vNormal; void main() { float intensity = pow(0.7 - dot(vNormal, vec3(0, 0, 1.0)), 4.0); gl_FragColor = vec4(glowColor, intensity * 0.5); }`,
+    side: THREE.FrontSide,
+    blending: THREE.AdditiveBlending,
+    transparent: true
+});
+const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+scene.add(glow);
+
+// Mehrere Ringe mit unterschiedlichen Orientierungen
+const rings = [];
+const ringConfigs = [
+    { radius: 1.8, tube: 0.015, rotation: [Math.PI / 2, 0, 0], speed: 0.002, opacity: 0.25 },
+    { radius: 2.1, tube: 0.012, rotation: [Math.PI / 2.5, 0, Math.PI / 4], speed: -0.0015, opacity: 0.2 },
+    { radius: 2.4, tube: 0.01, rotation: [Math.PI / 3, Math.PI / 4, 0], speed: 0.001, opacity: 0.15 },
+    { radius: 1.5, tube: 0.02, rotation: [0, Math.PI / 2, 0], speed: -0.0025, opacity: 0.3 }
+];
+
+ringConfigs.forEach(config => {
+    const ringGeometry = new THREE.TorusGeometry(config.radius, config.tube, 16, 100);
+    const ringMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0x4facfe,
+        transparent: true,
+        opacity: config.opacity,
+        side: THREE.DoubleSide
+    });
+    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+    ring.rotation.set(config.rotation[0], config.rotation[1], config.rotation[2]);
+    ring.userData.speed = config.speed;
+    rings.push(ring);
+    scene.add(ring);
+});
+
+// Partikel um die Kugel
+const particleCount = 100;
+const particleGeometry = new THREE.BufferGeometry();
+const particlePositions = new Float32Array(particleCount * 3);
+const particleSizes = new Float32Array(particleCount);
+
+for (let i = 0; i < particleCount; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.random() * Math.PI;
+    const radius = 2.5 + Math.random() * 1;
+    
+    particlePositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+    particlePositions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+    particlePositions[i * 3 + 2] = radius * Math.cos(phi);
+    particleSizes[i] = Math.random() * 2 + 1;
+}
+
+particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+particleGeometry.setAttribute('size', new THREE.BufferAttribute(particleSizes, 1));
+
+const particleMaterial = new THREE.PointsMaterial({
+    color: 0x4facfe,
+    size: 0.05,
+    transparent: true,
+    opacity: 0.6,
+    blending: THREE.AdditiveBlending,
+    sizeAttenuation: true
+});
+
+const particles = new THREE.Points(particleGeometry, particleMaterial);
+scene.add(particles);
+
+// Lichter
+const light1 = new THREE.PointLight(0x4facfe, 2, 100);
+light1.position.set(3, 3, 3);
+scene.add(light1);
+
+const light2 = new THREE.PointLight(0x00f2fe, 1.5, 100);
+light2.position.set(-3, -2, 2);
+scene.add(light2);
+
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+scene.add(ambientLight);
+
+const phases = [
+    {name: 'Einatmen', duration: 4, color: 0x4facfe, scale: 2.5, tone: 440},
+    {name: 'Halten', duration: 4, color: 0x00f2fe, scale: 2.5, tone: 523},
+    {name: 'Ausatmen', duration: 4, color: 0x43e97b, scale: 1, tone: 392},
+    {name: 'Halten', duration: 4, color: 0x38f9d7, scale: 1, tone: 349}
+];
+
+let currentPhase = 0, phaseProgress = 0, isRunning = false, isPaused = false;
+let totalSeconds = 0, cyclesCompleted = 0, lastTime = Date.now(), goalReached = false;
+
+const phaseEl = document.getElementById('phase');
+const timerEl = document.getElementById('timer');
+const cyclesEl = document.getElementById('cycles');
+const totalTimeEl = document.getElementById('total-time');
+const progressBar = document.getElementById('progress-bar');
+const progressPercent = document.getElementById('progress-percent');
+const motivationalText = document.getElementById('motivational-text');
+
+document.getElementById('start-btn').addEventListener('click', () => {
+    document.getElementById('intro-screen').classList.add('hidden');
+    isRunning = true;
+    playTone(phases[0].tone);
+    
+    if (musicEnabled) {
+        bgMusic.play().catch(e => console.log('Music play failed:', e));
+    }
+});
+
+document.getElementById('pause-btn').addEventListener('click', () => {
+    isPaused = !isPaused;
+    document.getElementById('pause-btn').textContent = isPaused ? 'Weiter' : 'Pause';
+    
+    if (isPaused) {
+        bgMusic.pause();
+    } else if (musicEnabled) {
+        bgMusic.play().catch(e => console.log('Music play failed:', e));
+    }
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+    currentPhase = phaseProgress = cyclesCompleted = totalSeconds = 0;
+    goalReached = false;
+    document.getElementById('completion-overlay').classList.remove('show');
+    bgMusic.currentTime = 0;
+    updateUI();
+});
+
+document.getElementById('continue-btn').addEventListener('click', () => {
+    goalReached = false;
+    document.getElementById('completion-overlay').classList.remove('show');
+});
+
+document.getElementById('finish-btn').addEventListener('click', () => location.reload());
+
+function updateUI() {
+    const phase = phases[currentPhase];
+    timerEl.textContent = Math.ceil(phase.duration - phaseProgress);
+    phaseEl.textContent = phase.name;
+    cyclesEl.textContent = cyclesCompleted;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    totalTimeEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    const progress = Math.min((cyclesCompleted / GOAL_CYCLES) * 100, 100);
+    progressBar.style.width = progress + '%';
+    progressPercent.textContent = Math.round(progress);
+    
+    if (cyclesCompleted > 0 && cyclesCompleted % 2 === 0 && cyclesCompleted < GOAL_CYCLES) {
+        const messageIndex = Math.min(Math.floor(cyclesCompleted / 2) - 1, motivationalMessages.length - 1);
+        motivationalText.textContent = motivationalMessages[messageIndex];
+        motivationalText.classList.add('show');
+        setTimeout(() => motivationalText.classList.remove('show'), 2000);
+    }
+    
+    if (cyclesCompleted >= GOAL_CYCLES && !goalReached) {
+        goalReached = true;
+        bgMusic.pause();
+        setTimeout(() => {
+            document.getElementById('completion-overlay').classList.add('show');
+            playTone(660, 0.5);
+        }, 500);
+    }
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+    
+    const now = Date.now();
+    const delta = (now - lastTime) / 1000;
+    lastTime = now;
+    
+    if (isRunning && !isPaused) {
+        phaseProgress += delta;
+        totalSeconds = Math.floor(phaseProgress / 4 + cyclesCompleted * 16);
+        
+        const phase = phases[currentPhase];
+        
+        if (phaseProgress >= phase.duration) {
+            phaseProgress = 0;
+            currentPhase = (currentPhase + 1) % phases.length;
+            if (currentPhase === 0) cyclesCompleted++;
+            playTone(phases[currentPhase].tone);
+        }
+        
+        const progress = phaseProgress / phase.duration;
+        let targetScale;
+        if (currentPhase === 0) {
+            targetScale = 1 + (phase.scale - 1) * progress;
+        } else if (currentPhase === 2) {
+            targetScale = phases[1].scale - (phases[1].scale - phase.scale) * progress;
+        } else {
+            targetScale = phase.scale;
+        }
+        
+        sphere.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
+        glow.scale.copy(sphere.scale).multiplyScalar(1.15);
+        innerSphere.scale.set(0.8, 0.8, 0.8);
+        
+        const currentColor = new THREE.Color(phase.color);
+        material.color.lerp(currentColor, 0.05);
+        coreMaterial.color.lerp(currentColor, 0.05);
+        innerSphereMat.color.lerp(currentColor, 0.03);
+        glowMaterial.uniforms.glowColor.value.lerp(currentColor, 0.05);
+        particleMaterial.color.lerp(currentColor, 0.03);
+        
+        rings.forEach(ring => {
+            ring.material.color.lerp(currentColor, 0.03);
+        });
+        
+        light1.color.lerp(currentColor, 0.05);
+        light2.color.lerp(currentColor, 0.04);
+        
+        updateUI();
+    }
+    
+    sphere.rotation.y += 0.002;
+    sphere.rotation.x += 0.001;
+    core.rotation.y -= 0.004;
+    core.rotation.x += 0.002;
+    innerSphere.rotation.y += 0.003;
+    innerSphere.rotation.z -= 0.002;
+    glow.rotation.y -= 0.0015;
+    
+    rings.forEach((ring, i) => {
+        ring.rotation.z += ring.userData.speed;
+        ring.rotation.y += ring.userData.speed * 0.5;
+    });
+    
+    particles.rotation.y += 0.0005;
+    particles.rotation.x += 0.0003;
+    
+    renderer.render(scene, camera);
+}
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+animate();
+</script>
+</body>
+</html>
