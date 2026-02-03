@@ -35,19 +35,19 @@
         #stats { font-size: 1.2em; background: rgba(0, 0, 0, 0.3); padding: 15px 25px; border-radius: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(79, 172, 254, 0.3); }
         #stats div { margin: 5px 0; font-weight: 300; }
         #controls { pointer-events: all; }
-        button { background: rgba(79, 172, 254, 0.2); border: 2px solid rgba(79, 172, 254, 0.5); color: white; padding: 15px 30px; font-size: 1.2em; border-radius: 50px; cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s ease; margin: 0 5px; font-weight: 300; letter-spacing: 1px; }
+        button { background: rgba(79, 172, 254, 0.2); border: 2px solid rgba(79, 172, 254, 0.5); color: white; padding: 15px 30px; font-size: 1.2em; border-radius: 50px; cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s ease; margin: 0 5px; font-weight: 300; letter-spacing: 1px; pointer-events: all; }
         button:hover { background: rgba(79, 172, 254, 0.4); transform: translateY(-2px); }
-        #intro-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 100; display: flex; justify-content: center; align-items: center; padding: 40px; }
-        #intro-content { max-width: 650px; text-align: center; color: white; background: rgba(0, 0, 0, 0.5); padding: 50px; border-radius: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(79, 172, 254, 0.3); }
+        #intro-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 100; display: flex; justify-content: center; align-items: center; padding: 40px; pointer-events: all; }
+        #intro-content { max-width: 650px; text-align: center; color: white; background: rgba(0, 0, 0, 0.5); padding: 50px; border-radius: 30px; backdrop-filter: blur(20px); border: 1px solid rgba(79, 172, 254, 0.3); pointer-events: all; }
         #intro-content h1 { font-size: 4em; margin-bottom: 20px; font-weight: 300; text-shadow: 0 0 30px rgba(79, 172, 254, 0.8); letter-spacing: 5px; }
         #intro-content h2 { font-size: 1.8em; margin: 30px 0 15px; font-weight: 400; color: #4facfe; }
         #intro-content p { font-size: 1.2em; line-height: 1.8; margin-bottom: 15px; opacity: 0.9; font-weight: 300; }
         #intro-content ul { text-align: left; margin: 20px auto; max-width: 400px; font-size: 1.1em; line-height: 2; }
-        #start-btn { margin-top: 30px; padding: 20px 50px; font-size: 1.5em; }
+        #start-btn { margin-top: 30px; padding: 20px 50px; font-size: 1.5em; pointer-events: all; }
         .hidden { display: none !important; }
         #completion-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 50; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
         #completion-overlay.show { opacity: 1; pointer-events: all; }
-        #completion-content { text-align: center; color: white; background: rgba(0, 0, 0, 0.5); padding: 60px; border-radius: 30px; backdrop-filter: blur(20px); border: 2px solid rgba(79, 172, 254, 0.5); transform: scale(0.8); transition: transform 0.5s ease; }
+        #completion-content { text-align: center; color: white; background: rgba(0, 0, 0, 0.5); padding: 60px; border-radius: 30px; backdrop-filter: blur(20px); border: 2px solid rgba(79, 172, 254, 0.5); transform: scale(0.8); transition: transform 0.5s ease; pointer-events: all; }
         #completion-overlay.show #completion-content { transform: scale(1); }
         #completion-content h2 { font-size: 3.5em; margin-bottom: 20px; }
         #completion-content p { font-size: 1.5em; margin: 15px 0; }
@@ -65,8 +65,31 @@
 <audio id="bg-music" loop preload="auto">
     <source src="breathe.mp3" type="audio/mpeg">
 </audio>
-<div id="intro-screen"><div id="intro-content"><h1>💨 BREATH SYNC</h1><p style="font-size: 1.4em; margin-bottom: 30px;">Box Breathing für Stress-Reduktion</p><h2>Dein Ziel</h2><p><strong>10 Atemzyklen</strong> in 2-3 Minuten</p><h2>Wie funktioniert's?</h2><p>Box Breathing (4-4-4-4) - Navy SEALs Atemtechnik</p><ul><li>🌬️ <strong>4 Sekunden</strong> einatmen</li><li>⏸️ <strong>4 Sekunden</strong> Atem halten</li><li>🌊 <strong>4 Sekunden</strong> ausatmen</li><li>⏸️ <strong>4 Sekunden</strong> Atem halten</li></ul><button id="start-btn">Jetzt starten</button></div></div>
-<div id="completion-overlay"><div id="completion-content"><h2>🎉 Ziel erreicht!</h2><p>10 Atemzyklen abgeschlossen!</p><button id="continue-btn" style="margin-top: 30px;">Weiter üben</button><button id="finish-btn" style="margin-top: 30px;">Beenden</button></div></div>
+<div id="intro-screen">
+    <div id="intro-content">
+        <h1>💨 BREATH SYNC</h1>
+        <p style="font-size: 1.4em; margin-bottom: 30px;">Box Breathing für Stress-Reduktion</p>
+        <h2>Dein Ziel</h2>
+        <p><strong>10 Atemzyklen</strong> in 2-3 Minuten</p>
+        <h2>Wie funktioniert's?</h2>
+        <p>Box Breathing (4-4-4-4) - Navy SEALs Atemtechnik</p>
+        <ul>
+            <li>🌬️ <strong>4 Sekunden</strong> einatmen</li>
+            <li>⏸️ <strong>4 Sekunden</strong> Atem halten</li>
+            <li>🌊 <strong>4 Sekunden</strong> ausatmen</li>
+            <li>⏸️ <strong>4 Sekunden</strong> Atem halten</li>
+        </ul>
+        <button id="start-btn">Jetzt starten</button>
+    </div>
+</div>
+<div id="completion-overlay">
+    <div id="completion-content">
+        <h2>🎉 Ziel erreicht!</h2>
+        <p>10 Atemzyklen abgeschlossen!</p>
+        <button id="continue-btn" style="margin-top: 30px;">Weiter üben</button>
+        <button id="finish-btn" style="margin-top: 30px;">Beenden</button>
+    </div>
+</div>
 <div id="canvas-container"></div>
 <div id="ui-overlay">
     <div id="header">
@@ -275,26 +298,33 @@ render();
 const bgMusic = document.getElementById('bg-music');
 let soundEnabled = true;
 let musicEnabled = true;
+let isRunning = false;
 
 const soundToggle = document.getElementById('sound-toggle');
 const musicToggle = document.getElementById('music-toggle');
 
-soundToggle.addEventListener('click', () => {
+soundToggle.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     soundEnabled = !soundEnabled;
     soundToggle.classList.toggle('active');
     soundToggle.querySelector('.icon').textContent = soundEnabled ? '🔊' : '🔇';
+    console.log('Sound enabled:', soundEnabled);
 });
 
-musicToggle.addEventListener('click', () => {
+musicToggle.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     musicEnabled = !musicEnabled;
     musicToggle.classList.toggle('active');
     musicToggle.querySelector('.icon').textContent = musicEnabled ? '🎵' : '🎶';
     
     if (musicEnabled && isRunning) {
-        bgMusic.play().catch(e => console.log('Music play failed:', e));
+        bgMusic.play().catch(e => console.log('Music play error:', e));
     } else {
         bgMusic.pause();
     }
+    console.log('Music enabled:', musicEnabled);
 });
 
 // Three.js
@@ -304,16 +334,20 @@ const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
 function playTone(frequency = 440, duration = 0.15) {
     if (!soundEnabled) return;
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    oscillator.frequency.value = frequency;
-    oscillator.type = 'sine';
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + duration);
+    try {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + duration);
+    } catch(e) {
+        console.log('Tone play error:', e);
+    }
 }
 
 const scene = new THREE.Scene();
@@ -325,14 +359,14 @@ renderer.setClearColor(0x000000, 0);
 document.getElementById('canvas-container').appendChild(renderer.domElement);
 camera.position.z = 5;
 
-// Hauptkugel
+// Hauptkugel - NEUE OPACITY WERTE
 const geometry = new THREE.SphereGeometry(1, 128, 128);
 const material = new THREE.MeshPhysicalMaterial({ 
     color: 0x4facfe,
     metalness: 0.1,
     roughness: 0.05,
     transparent: true,
-    opacity: 0.9,
+    opacity: 0.7,
     transmission: 0.3,
     thickness: 0.5,
     clearcoat: 1.0,
@@ -343,17 +377,17 @@ const material = new THREE.MeshPhysicalMaterial({
 const sphere = new THREE.Mesh(geometry, material);
 scene.add(sphere);
 
-// Innerer Kern
+// Innerer Kern - NEUE OPACITY
 const coreGeometry = new THREE.SphereGeometry(0.6, 64, 64);
 const coreMaterial = new THREE.MeshBasicMaterial({ 
     color: 0x4facfe, 
     transparent: true, 
-    opacity: 0.8 
+    opacity: 0.8
 });
 const core = new THREE.Mesh(coreGeometry, coreMaterial);
 sphere.add(core);
 
-// Zusätzliche innere Kugel für mehr Tiefe
+// Zusätzliche innere Kugel - NEUE OPACITY
 const innerSphereGeo = new THREE.SphereGeometry(0.8, 64, 64);
 const innerSphereMat = new THREE.MeshPhysicalMaterial({
     color: 0x00f2fe,
@@ -379,7 +413,7 @@ const glowMaterial = new THREE.ShaderMaterial({
 const glow = new THREE.Mesh(glowGeometry, glowMaterial);
 scene.add(glow);
 
-// Mehrere Ringe mit unterschiedlichen Orientierungen
+// Mehrere Ringe
 const rings = [];
 const ringConfigs = [
     { radius: 1.8, tube: 0.015, rotation: [Math.PI / 2, 0, 0], speed: 0.002, opacity: 0.25 },
@@ -403,7 +437,7 @@ ringConfigs.forEach(config => {
     scene.add(ring);
 });
 
-// Partikel um die Kugel
+// Partikel
 const particleCount = 100;
 const particleGeometry = new THREE.BufferGeometry();
 const particlePositions = new Float32Array(particleCount * 3);
@@ -454,7 +488,7 @@ const phases = [
     {name: 'Halten', duration: 4, color: 0x38f9d7, scale: 1, tone: 349}
 ];
 
-let currentPhase = 0, phaseProgress = 0, isRunning = false, isPaused = false;
+let currentPhase = 0, phaseProgress = 0, isPaused = false;
 let totalSeconds = 0, cyclesCompleted = 0, lastTime = Date.now(), goalReached = false;
 
 const phaseEl = document.getElementById('phase');
@@ -468,10 +502,22 @@ const motivationalText = document.getElementById('motivational-text');
 document.getElementById('start-btn').addEventListener('click', () => {
     document.getElementById('intro-screen').classList.add('hidden');
     isRunning = true;
+    
+    // AudioContext resume (wichtig für Browser-Autoplay-Policy)
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+    
     playTone(phases[0].tone);
     
     if (musicEnabled) {
-        bgMusic.play().catch(e => console.log('Music play failed:', e));
+        bgMusic.volume = 0.5;
+        bgMusic.play().then(() => {
+            console.log('Music started successfully');
+        }).catch(e => {
+            console.error('Music play failed:', e);
+            alert('Musik konnte nicht geladen werden. Stelle sicher, dass breathe.mp3 im gleichen Ordner ist.');
+        });
     }
 });
 
@@ -482,7 +528,7 @@ document.getElementById('pause-btn').addEventListener('click', () => {
     if (isPaused) {
         bgMusic.pause();
     } else if (musicEnabled) {
-        bgMusic.play().catch(e => console.log('Music play failed:', e));
+        bgMusic.play().catch(e => console.log('Music resume failed:', e));
     }
 });
 
@@ -497,6 +543,9 @@ document.getElementById('reset-btn').addEventListener('click', () => {
 document.getElementById('continue-btn').addEventListener('click', () => {
     goalReached = false;
     document.getElementById('completion-overlay').classList.remove('show');
+    if (musicEnabled) {
+        bgMusic.play().catch(e => console.log('Music play failed:', e));
+    }
 });
 
 document.getElementById('finish-btn').addEventListener('click', () => location.reload());
